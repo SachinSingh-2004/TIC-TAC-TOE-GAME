@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Tic Tac Toe Game</title>
+  <style>
+    body {
+      background-color: #08767c; /* Simple light gray background */
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .box {
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 300px;
+      background-color: #e4caca;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #aaa;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .cell {
+      width: 80px;
+      height: 80px;
+      font-size: 32px;
+      font-weight: bold;
+      color: #333;
+      background-color: #d4af6e;
+      border-radius: 8px;
+      cursor: pointer;
+      line-height: 80px;
+    }
+
+    .status {
+      font-size: 18px;
+      margin-top: 15px;
+      font-weight: bold;
+      color: rgb(119, 235, 119);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+
+  <div class="box">
+    <select id="mode">
+      <option value="1">1 Player (vs Computer)</option>
+      <option value="2">2 Players</option>
+    </select>
+
+    <input id="p1" placeholder="Player 1 Name (X)">
+    <input id="p2" placeholder="Player 2 / Computer Name (O)">
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <div class="status hidden" id="statusText"></div>
+  <div class="grid hidden" id="gameBoard"></div>
+  <button onclick="resetGame()" class="hidden" id="resetBtn">Reset</button>
+
+  <script>
+    // Variables to manage game state
+    let cells = []; // 9 boxes
+    let currentTurn = 'X';
+    let player1 = '', player2 = '';
+    let singlePlayer = false;
+    let over = false;
+
+    const winningPatterns = [
+      [0,1,2], [3,4,5], [6,7,8], // Rows
+      [0,3,6], [1,4,7], [2,5,8], // Columns
+      [0,4,8], [2,4,6]           // Diagonals
+    ];
+
+    // Start game button
+    function startGame() {
+      const mode = document.getElementById("mode").value;
+      singlePlayer = mode === "1";
+
+      player1 = document.getElementById("p1").value || "Player 1";
+      player2 = singlePlayer ? "Computer" : (document.getElementById("p2").value || "Player 2");
+
+      cells = Array(9).fill('');
+      currentTurn = 'X';
+      over = false;
+
+      // Show game board
+      document.getElementById("gameBoard").classList.remove("hidden");
+      document.getElementById("statusText").classList.remove("hidden");
+      document.getElementById("resetBtn").classList.remove("hidden");
+
+      drawBoard();
+      showStatus();
+    }
+
+    // Display game board
+    function drawBoard() {
+      const board = document.getElementById("gameBoard");
+      board.innerHTML = "";
+
+      cells.forEach((value, index) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.innerText = value;
+        cell.onclick = () => makeMove(index);
+        board.appendChild(cell);
+      });
+    }
+
+    // When a cell is clicked
+    function makeMove(index) {
+      if (cells[index] || over) return;
+
+      cells[index] = currentTurn;
+      drawBoard();
+
+      if (checkWinner()) {
+        document.getElementById("statusText").innerText = getPlayerName() + " wins!";
+        over = true;
+        return;
+      }
+
+      if (!cells.includes("")) {
+        document.getElementById("statusText").innerText = "It's a draw!";
+        over = true;
+        return;
+      }
+
+      currentTurn = currentTurn === "X" ? "O" : "X";
+      showStatus();
+
+      // If it's computer's turn in 1 player mode
+      if (singlePlayer && currentTurn === 'O' && !over) {
+        setTimeout(computerTurn, 400);
+      }
+    }
+
+    // Computer plays randomly
+    function computerTurn() {
+      let empty = cells.map((val, i) => val === "" ? i : null).filter(i => i !== null);
+      let random = empty[Math.floor(Math.random() * empty.length)];
+      makeMove(random);
+    }
+
+    // Show status message
+    function showStatus() {
+      let name = getPlayerName();
+      document.getElementById("statusText").innerText = name + "'s Turn (" + currentTurn + ")";
+    }
+
+    // Get current player name
+    function getPlayerName() {
+      return currentTurn === "X" ? player1 : player2;
+    }
+
+    // Check if someone won
+    function checkWinner() {
+      return winningPatterns.some(pattern => {
+        const [a, b, c] = pattern;
+        return cells[a] && cells[a] === cells[b] && cells[b] === cells[c];
+      });
+    }
+
+    // Reset the game
+    function resetGame() {
+      cells = Array(9).fill('');
+      over = false;
+      currentTurn = 'X';
+      drawBoard();
+      showStatus();
+    }
+  </script>
+
+</body>
+</html>

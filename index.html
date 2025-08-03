@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tic Tac Toe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #ff6a00, #ee0979);
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 10px #000;
+    }
+
+    .input-container {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ffffff55;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px #ffcc70;
+      max-width: 320px;
+      margin-inline: auto;
+    }
+
+    input, select, button {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      margin: 10px 0;
+      width: 100%;
+    }
+
+    button {
+      background: #ffc107;
+      color: #333;
+      box-shadow: 0 0 10px #ffeb3b;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ff9800;
+    }
+
+    .status {
+      font-size: 24px;
+      margin: 20px;
+      font-weight: bold;
+      color: #ffea00;
+      text-shadow: 0 0 5px #fff176;
+    }
+
+    .winner {
+      color: #00ffc3;
+      text-shadow: 0 0 10px #00ffea;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 15px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #fff;
+      color: #333;
+      font-size: 40px;
+      line-height: 100px;
+      border-radius: 15px;
+      font-weight: bold;
+      box-shadow: 0 0 15px #ffcc70;
+      cursor: pointer;
+    }
+
+    .cell:hover {
+      background: #ffe0b2;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 Tic Tac Toe</h1>
+
+  <div class="input-container">
+    <select id="mode">
+      <option value="1">1 Player (vs Computer)</option>
+      <option value="2">2 Players</option>
+    </select>
+    <input id="player1" placeholder="Player 1 Name (X)" />
+    <input id="player2" placeholder="Player 2 Name (O)" />
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <div id="status" class="status hidden"></div>
+  <div id="board" class="board hidden"></div>
+  <button onclick="resetGame()" id="resetBtn" class="hidden">🔁 Reset Game</button>
+
+  <script>
+    let board = [], currentPlayer = 'X', isGameOver = false;
+    let player1Name = '', player2Name = '', mode = 2;
+
+    const winPatterns = [
+      [0,1,2], [3,4,5], [6,7,8],
+      [0,3,6], [1,4,7], [2,5,8],
+      [0,4,8], [2,4,6],
+    ];
+
+    function startGame() {
+      board = Array(9).fill('');
+      isGameOver = false;
+      currentPlayer = 'X';
+      mode = +document.getElementById('mode').value;
+      player1Name = document.getElementById('player1').value || 'Player 1';
+      player2Name = mode === 1 ? 'Computer' : (document.getElementById('player2').value || 'Player 2');
+
+      document.getElementById('status').classList.remove('hidden');
+      document.getElementById('board').classList.remove('hidden');
+      document.getElementById('resetBtn').classList.remove('hidden');
+
+      renderBoard();
+      updateStatus();
+    }
+
+    function renderBoard() {
+      const boardDiv = document.getElementById('board');
+      boardDiv.innerHTML = '';
+      board.forEach((val, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerText = val;
+        cell.onclick = () => makeMove(i);
+        boardDiv.appendChild(cell);
+      });
+    }
+
+    function makeMove(i) {
+      if (board[i] || isGameOver) return;
+      board[i] = currentPlayer;
+      renderBoard();
+
+      if (checkWinner()) {
+        showStatus(`${getPlayerName()} wins!`, true);
+        isGameOver = true;
+        return;
+      }
+
+      if (!board.includes('')) {
+        showStatus("It's a draw!");
+        isGameOver = true;
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      updateStatus();
+
+      if (mode === 1 && currentPlayer === 'O' && !isGameOver) {
+        setTimeout(computerMove, 400);
+      }
+    }
+
+    function computerMove() {
+      let emptyCells = board.map((v, i) => v === '' ? i : null).filter(i => i !== null);
+      let random = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      makeMove(random);
+    }
+
+    function checkWinner() {
+      return winPatterns.some(p => {
+        const [a, b, c] = p;
+        return board[a] && board[a] === board[b] && board[b] === board[c];
+      });
+    }
+
+    function updateStatus() {
+      showStatus(`${getPlayerName()}'s Turn (${currentPlayer})`);
+    }
+
+    function showStatus(msg, isWinner = false) {
+      const el = document.getElementById('status');
+      el.innerHTML = isWinner ? `<span class="winner">🏆 ${msg}</span>` : msg;
+    }
+
+    function getPlayerName() {
+      return currentPlayer === 'X' ? player1Name : player2Name;
+    }
+
+    function resetGame() {
+      board = Array(9).fill('');
+      isGameOver = false;
+      currentPlayer = 'X';
+      renderBoard();
+      updateStatus();
+    }
+  </script>
+</body>
+</html>
